@@ -1,8 +1,8 @@
 package yalantis.com.sidemenu.util;
 
 import android.os.Handler;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
@@ -31,19 +31,22 @@ public class ViewAnimator<T extends Resourceble> {
     private ScreenShotable screenShotable;
     private DrawerLayout drawerLayout;
     private ViewAnimatorListener animatorListener;
+    private boolean isRTL;
 
 
     public ViewAnimator(AppCompatActivity activity,
                         List<T> items,
                         ScreenShotable screenShotable,
                         final DrawerLayout drawerLayout,
-                        ViewAnimatorListener animatorListener) {
+                        ViewAnimatorListener animatorListener,
+                        boolean isRTL) {
         this.appCompatActivity = activity;
 
         this.list = items;
         this.screenShotable = screenShotable;
         this.drawerLayout = drawerLayout;
         this.animatorListener = animatorListener;
+        this.isRTL = isRTL;
     }
 
 
@@ -55,16 +58,29 @@ public class ViewAnimator<T extends Resourceble> {
             View viewMenu = appCompatActivity.getLayoutInflater().inflate(R.layout.menu_list_item, null);
 
             final int finalI = i;
+            if(isRTL)
             viewMenu.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int[] location = {0, 0};
+                    int[] location = {appCompatActivity.getWindow().getDecorView().getWidth(), 0};
                     v.getLocationOnScreen(location);
                     switchItem(list.get(finalI), location[1] + v.getHeight() / 2);
                 }
             });
+            else
+                viewMenu.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int[] location = {0, 0};
+                        v.getLocationOnScreen(location);
+                        switchItem(list.get(finalI), location[1] + v.getHeight() / 2);
+                    }
+                });
             ((ImageView) viewMenu.findViewById(R.id.menu_item_image)).setImageResource(list.get(i).getImageRes());
-            viewMenu.setVisibility(View.GONE);
+
+            if(isRTL) viewMenu.setVisibility(View.INVISIBLE);
+            else viewMenu.setVisibility(View.INVISIBLE);
+
             viewMenu.setEnabled(false);
             viewList.add(viewMenu);
             animatorListener.addViewToContainer(viewMenu);
@@ -112,8 +128,11 @@ public class ViewAnimator<T extends Resourceble> {
     private void animateView(int position) {
         final View view = viewList.get(position);
         view.setVisibility(View.VISIBLE);
-        FlipAnimation rotation =
-                new FlipAnimation(90, 0, 0.0f, view.getHeight() / 2.0f);
+
+        FlipAnimation rotation;
+        if(isRTL) rotation = new FlipAnimation(-90, 0, view.getWidth(), view.getHeight() / 2.0f);
+        else rotation = new FlipAnimation(90, 0, 0.0f, view.getHeight() / 2.0f);
+
         rotation.setDuration(ANIMATION_DURATION);
         rotation.setFillAfter(true);
         rotation.setInterpolator(new AccelerateInterpolator());
@@ -139,8 +158,11 @@ public class ViewAnimator<T extends Resourceble> {
 
     private void animateHideView(final int position) {
         final View view = viewList.get(position);
-        FlipAnimation rotation =
-                new FlipAnimation(0, 90, 0.0f, view.getHeight() / 2.0f);
+
+        FlipAnimation rotation;
+        if(isRTL) rotation = new FlipAnimation(0, -90, view.getWidth(), view.getHeight() / 2.0f);
+        else rotation = new FlipAnimation(0, 90, 0.0f, view.getHeight() / 2.0f);
+
         rotation.setDuration(ANIMATION_DURATION);
         rotation.setFillAfter(true);
         rotation.setInterpolator(new AccelerateInterpolator());

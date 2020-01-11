@@ -5,19 +5,17 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.widget.LinearLayout;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import io.codetail.animation.ViewAnimationUtils;
 import yalantis.com.sidemenu.interfaces.Resourceble;
 import yalantis.com.sidemenu.interfaces.ScreenShotable;
@@ -33,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     private ViewAnimator viewAnimator;
     private int res = R.drawable.content_music;
     private LinearLayout linearLayout;
+    private boolean isRTL = true;
+
 
 
     @Override
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
 
         setActionBar();
         createMenuList();
-        viewAnimator = new ViewAnimator<>(this, list, contentFragment, drawerLayout, this);
+        viewAnimator = new ViewAnimator<>(this, list, contentFragment, drawerLayout, this, isRTL);
     }
 
     private void createMenuList() {
@@ -146,11 +146,14 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         }
     }
 
-    private ScreenShotable replaceFragment(ScreenShotable screenShotable, int topPosition) {
+    private ScreenShotable replaceFragment(ScreenShotable screenShotable, int topPosition, boolean isRTL) {
         this.res = this.res == R.drawable.content_music ? R.drawable.content_films : R.drawable.content_music;
         View view = findViewById(R.id.content_frame);
         int finalRadius = Math.max(view.getWidth(), view.getHeight());
-        Animator animator = ViewAnimationUtils.createCircularReveal(view, 0, topPosition, 0, finalRadius);
+
+        Animator animator;
+        if(isRTL) animator = ViewAnimationUtils.createCircularReveal(view, getWindow().getDecorView().getWidth(), topPosition, 0, finalRadius);
+        else animator = ViewAnimationUtils.createCircularReveal(view, 0, topPosition, 0, finalRadius);
         animator.setInterpolator(new AccelerateInterpolator());
         animator.setDuration(ViewAnimator.CIRCULAR_REVEAL_ANIMATION_DURATION);
 
@@ -167,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             case ContentFragment.CLOSE:
                 return screenShotable;
             default:
-                return replaceFragment(screenShotable, position);
+                return replaceFragment(screenShotable, position, isRTL);
         }
     }
 
